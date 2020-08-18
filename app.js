@@ -8,7 +8,7 @@ GAME RULES:
 */
 
 // Initialize score variables
-var scores, roundScore, activePlayer, gamePlaying;
+var scores, roundScore, activePlayer, gamePlaying, previousRoll;
 
 // Initialize New Game
 init();
@@ -18,22 +18,45 @@ init();
 document.querySelector('.btn-roll').addEventListener('click', function(){
   if (gamePlaying){
     // 1. random number
-    var dice = Math.floor(Math.random()*6)+1;
+    var dice1 = Math.floor(Math.random()*6)+1;
+    var dice2 = Math.floor(Math.random()*6)+1;
 
     // 2. Display the result
-    var diceDOM = document.querySelector('.dice');  // save the query selection in a local variable
-    diceDOM.style.display = 'block';
-    diceDOM.src = 'img/dice-'+dice+'.png';
+    document.getElementById('dice-1').style.display = 'block';
+    document.getElementById('dice-2').style.display = 'block';
+    document.getElementById('dice-1').src = 'img/dice-'+dice1+'.png';
+    document.getElementById('dice-2').src = 'img/dice-'+dice2+'.png';
 
-    // 3. Update the round score IF the rolled number is NOT a 1
+    // 3. Update the round score IF the rolled number is NOT a 1 OR 2 sixes in a row
+    if (dice1 !== 1 && dice2 !== 1){
+      // Add score
+      roundScore += dice1+dice2;
+      document.querySelector('#current-'+activePlayer).textContent = roundScore;
+    }else {
+      // Next Player
+      nextPlayer();
+    }
+    /*
     if (dice !== 1){
-      // add to current score
-      roundScore += dice;
-      document.querySelector('#current-' + activePlayer).textContent = roundScore;
+      // Check for 2 6's in a row
+      if (previousRoll === 6 && dice === 6){
+        // Lose ENTIRE score
+        scores[activePlayer] = 0;
+        document.querySelector('#score-' + activePlayer).textContent = scores[activePlayer];
+        // End turn
+        nextPlayer();
+      }else{
+        // add to current score
+        roundScore += dice;
+        document.querySelector('#current-' + activePlayer).textContent = roundScore;
+        // Save dive roll to previousRoll
+        previousRoll = dice;
+      }
     }else {
       // round ends / reset roundscore
       nextPlayer();
     }
+    */
   }
 });
 
@@ -46,10 +69,19 @@ document.querySelector('.btn-hold').addEventListener('click', function(){
     // Update UI
     document.querySelector('#score-' + activePlayer).textContent = scores[activePlayer];
 
+    var input = document.querySelector('.final-score').value;
+    var winningScore;
+    // Make sure that the input is a truthy value
+    if (input){
+      winningScore = input;
+    }else {
+      winningScore = 100;
+    }
     // Check if player won the game
-    if (scores[activePlayer] >= 10){
+    if (scores[activePlayer] >= winningScore){
       document.querySelector('#name-' + activePlayer).textContent = 'WINNER!';
-      document.querySelector('.dice').style.display = 'none';
+      document.getElementById('dice-1').style.display = 'none';
+      document.getElementById('dice-2').style.display = 'none';
       document.querySelector('.player-' + activePlayer + '-panel').classList.add('winner');
       document.querySelector('.player-' + activePlayer + '-panel').classList.remove('active');
       gamePlaying = false;
@@ -74,7 +106,11 @@ function nextPlayer(){
   document.querySelector('.player-1-panel').classList.toggle('active');
 
   // Hide the dice when 1 is rolled
-  document.querySelector('.dice').style.display = 'none';
+  document.getElementById('dice-1').style.display = 'none';
+  document.getElementById('dice-2').style.display = 'none';
+
+  // Reset Previous Roll
+  previousRoll = 0;
 };
 
 document.querySelector('.btn-new').addEventListener('click', init);
@@ -87,7 +123,8 @@ function init(){
   gamePlaying = true;
 
   // Hide the dice at the begining - before it has ever been rolled
-  document.querySelector('.dice').style.display = 'none';
+  document.getElementById('dice-1').style.display = 'none';
+  document.getElementById('dice-2').style.display = 'none';
 
   // Set all displayed scores to 0 to begin the game
   // * this is a different way to select HTML elemens aside from 'querySelector'
